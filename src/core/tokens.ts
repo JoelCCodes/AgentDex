@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
+import { writeFileAtomic } from './fs.js';
 import { homedir } from 'os';
 import type { TokenInfo } from '../types.js';
 import {
@@ -84,13 +85,9 @@ export async function fetchTokenList(apiKey?: string): Promise<TokenInfo[]> {
     logoURI: t.icon,
   }));
 
-  // Write cache
-  const dir = expandHome(CONFIG_DIR);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
+  // Write cache atomically
   const cache: TokenCache = { timestamp: Date.now(), tokens };
-  writeFileSync(cachePath, JSON.stringify(cache), 'utf-8');
+  writeFileAtomic(cachePath, JSON.stringify(cache));
 
   return tokens;
 }

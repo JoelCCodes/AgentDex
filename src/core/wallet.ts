@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, existsSync, mkdirSync } from 'fs';
+import { writeFileAtomic } from './fs.js';
 import { dirname } from 'path';
 import { Keypair, Transaction, PublicKey } from '@solana/web3.js';
 import type { Signer } from '../types.js';
@@ -60,7 +61,7 @@ export function generateWallet(outputPath: string): Keypair {
     throw new Error(`Wallet file already exists: ${resolved}. Will not overwrite.`);
   }
   const keypair = Keypair.generate();
-  writeFileSync(resolved, JSON.stringify(Array.from(keypair.secretKey)), { mode: 0o600 });
+  writeFileAtomic(resolved, JSON.stringify(Array.from(keypair.secretKey)), { mode: 0o600 });
   return keypair;
 }
 

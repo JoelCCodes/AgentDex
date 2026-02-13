@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { readFileSync, mkdirSync, existsSync } from 'fs';
+import { writeFileAtomic } from './fs.js';
 import { parse as parseToml, stringify as stringifyToml } from '@iarna/toml';
 import type { JsonMap } from '@iarna/toml';
 import { homedir } from 'os';
@@ -156,7 +157,7 @@ export function setConfigValue(key: string, value: string): void {
     parsed[key] = value;
   }
 
-  writeFileSync(expandHome(CONFIG_FILE), stringifyToml(parsed), 'utf-8');
+  writeFileAtomic(expandHome(CONFIG_FILE), stringifyToml(parsed));
 }
 
 /**
@@ -191,5 +192,5 @@ export function setSafetyValue(key: string, value: string): void {
     safety[key] = value.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
   }
 
-  writeFileSync(expandHome(CONFIG_FILE), stringifyToml(parsed), 'utf-8');
+  writeFileAtomic(expandHome(CONFIG_FILE), stringifyToml(parsed));
 }
