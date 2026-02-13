@@ -175,7 +175,16 @@ export function swapCommand(): Command {
       }
 
       const slippageBps = opts.slippageBps != null ? Number(opts.slippageBps) : DEFAULT_SLIPPAGE_BPS;
+      if (isNaN(slippageBps) || slippageBps < 0 || slippageBps > 10000) {
+        printError('--slippage-bps must be between 0 and 10000', mode, EXIT_GENERAL);
+        process.exit(EXIT_GENERAL);
+      }
+
       const feeBps = opts.feeBps != null ? Number(opts.feeBps) : config.fee_bps;
+      if (isNaN(feeBps) || feeBps < 0 || feeBps > 10000) {
+        printError('--fee-bps must be between 0 and 10000', mode, EXIT_GENERAL);
+        process.exit(EXIT_GENERAL);
+      }
 
       // Non-TTY without --yes: reject for agent safety (simulation-only is safe)
       if (!opts.yes && !opts.simulateOnly && !process.stdin.isTTY) {
@@ -249,10 +258,17 @@ export function swapCommand(): Command {
           } catch {
             // Fee ATA doesn't exist — auto-create if enabled, otherwise skip fee
             if (config.auto_create_fee_ata) {
-              await ensureFeeAta(connection, keypair, feeWallet, outputToken.mint, feeAtaAddress);
-              feeAccount = feeAtaAddress;
+              try {
+                await ensureFeeAta(connection, keypair, feeWallet, outputToken.mint, feeAtaAddress);
+                feeAccount = feeAtaAddress;
+              } catch (ataErr) {
+                if (mode === OutputMode.Human) {
+                  console.error(chalk.yellow(`WARNING: Failed to create fee ATA: ${ataErr instanceof Error ? ataErr.message : String(ataErr)}. Fee will be skipped for this swap.`));
+                }
+              }
+            } else if (mode === OutputMode.Human) {
+              console.error(chalk.yellow(`WARNING: Fee ATA does not exist for ${outputToken.symbol}. Fee will be skipped for this swap.`));
             }
-            // else: silently skip fee for this token
           }
         }
         const { swapTransaction: swapTxBase64, lastValidBlockHeight } = await getSwapTransaction({

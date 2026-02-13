@@ -10,7 +10,7 @@ import { expandHome } from '../core/config.js';
 import { existsSync, readFileSync } from 'fs';
 
 interface StatusResult {
-  rpc: { url: string; healthy: boolean; latency_ms: number | null };
+  rpc: { url: string; healthy: boolean; latency_ms: number | null; error?: string };
   wallet: { configured: boolean; pubkey: string | null };
   fee_account: { configured: boolean; pubkey: string | null };
   token_list: { loaded: boolean; count: number | null };
@@ -49,8 +49,9 @@ export function statusCommand(): Command {
         const latency = Math.round(performance.now() - start);
         result.rpc.healthy = true;
         result.rpc.latency_ms = latency;
-      } catch {
+      } catch (err) {
         hasFailure = true;
+        result.rpc.error = err instanceof Error ? err.message : String(err);
       }
 
       // Check wallet
@@ -96,7 +97,7 @@ export function statusCommand(): Command {
 
         const lines: string[] = [];
         lines.push(
-          `${chalk.bold('RPC:')}     ${result.rpc.healthy ? ok : fail}  ${result.rpc.url}${result.rpc.latency_ms != null ? ` (${result.rpc.latency_ms}ms)` : ''}`,
+          `${chalk.bold('RPC:')}     ${result.rpc.healthy ? ok : fail}  ${result.rpc.url}${result.rpc.latency_ms != null ? ` (${result.rpc.latency_ms}ms)` : ''}${result.rpc.error ? ` — ${result.rpc.error}` : ''}`,
         );
         lines.push(
           `${chalk.bold('Wallet:')}  ${result.wallet.configured ? (result.wallet.pubkey ? ok : fail) : fail}  ${result.wallet.pubkey ?? (config.wallet || 'not configured')}`,

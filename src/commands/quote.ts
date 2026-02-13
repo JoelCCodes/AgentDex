@@ -42,6 +42,11 @@ export function quoteCommand(): Command {
       }
 
       const slippageBps = opts.slippageBps != null ? Number(opts.slippageBps) : DEFAULT_SLIPPAGE_BPS;
+      if (isNaN(slippageBps) || slippageBps < 0 || slippageBps > 10000) {
+        printError('--slippage-bps must be between 0 and 10000', mode, EXIT_GENERAL);
+        process.exit(EXIT_GENERAL);
+      }
+
       const feeBps = opts.feeBps != null ? Number(opts.feeBps) : config.fee_bps;
 
       try {

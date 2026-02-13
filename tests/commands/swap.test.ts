@@ -296,6 +296,42 @@ describe('swap command - flag parsing and config errors', () => {
     expect(stderr).toContain('Non-interactive mode requires --yes flag');
   });
 
+  it('rejects negative slippage-bps', async () => {
+    const { exitCode, stderr } = await run([
+      'swap', '--in', 'SOL', '--out', 'USDC', '--amount', '1',
+      '--slippage-bps', '-10', '--yes', '--json', '--wallet', keypairPath,
+    ]);
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain('--slippage-bps must be between 0 and 10000');
+  });
+
+  it('rejects excessive slippage-bps', async () => {
+    const { exitCode, stderr } = await run([
+      'swap', '--in', 'SOL', '--out', 'USDC', '--amount', '1',
+      '--slippage-bps', '20000', '--yes', '--json', '--wallet', keypairPath,
+    ]);
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain('--slippage-bps must be between 0 and 10000');
+  });
+
+  it('rejects negative fee-bps', async () => {
+    const { exitCode, stderr } = await run([
+      'swap', '--in', 'SOL', '--out', 'USDC', '--amount', '1',
+      '--fee-bps', '-5', '--yes', '--json', '--wallet', keypairPath,
+    ]);
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain('--fee-bps must be between 0 and 10000');
+  });
+
+  it('rejects excessive fee-bps', async () => {
+    const { exitCode, stderr } = await run([
+      'swap', '--in', 'SOL', '--out', 'USDC', '--amount', '1',
+      '--fee-bps', '15000', '--yes', '--json', '--wallet', keypairPath,
+    ]);
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain('--fee-bps must be between 0 and 10000');
+  });
+
   it('invalid amount rejects (exit 1)', async () => {
     const { exitCode, stderr } = await run([
       'swap', '--in', 'SOL', '--out', 'USDC', '--amount', 'abc',

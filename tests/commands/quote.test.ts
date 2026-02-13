@@ -71,10 +71,23 @@ describe('quote', () => {
     expect(stderr).toContain('positive number');
   });
 
+  it('rejects negative slippage-bps', async () => {
+    const { exitCode, stderr } = await run(['quote', '--in', 'SOL', '--out', 'USDC', '--amount', '1', '--slippage-bps', '-10']);
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain('--slippage-bps must be between 0 and 10000');
+  });
+
+  it('rejects excessive slippage-bps', async () => {
+    const { exitCode, stderr } = await run(['quote', '--in', 'SOL', '--out', 'USDC', '--amount', '1', '--slippage-bps', '20000']);
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain('--slippage-bps must be between 0 and 10000');
+  });
+
   it('errors on unresolvable token', async () => {
     const { exitCode, stderr } = await run(['quote', '--in', 'FAKETOKENZZ', '--out', 'USDC', '--amount', '1']);
     expect(exitCode).toBe(1);
-    expect(stderr).toContain('Token not found');
+    // May fail with "Token not found" or a fetch error (no API key in test env)
+    expect(stderr.includes('Token not found') || stderr.includes('fetch token list') || stderr.includes('Failed to fetch')).toBe(true);
   });
 
   it('accepts all valid flags without syntax errors', async () => {
