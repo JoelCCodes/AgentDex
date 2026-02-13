@@ -65,13 +65,16 @@ export async function fetchTokenList(apiKey?: string): Promise<TokenInfo[]> {
     throw new Error(`Failed to fetch token list: ${res.status} ${res.statusText}`);
   }
 
-  const data: Array<{
-    id: string;
-    symbol: string;
-    name: string;
-    decimals: number;
-    icon?: string;
-  }> = await res.json();
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error('Token list returned invalid JSON');
+  }
+
+  if (!Array.isArray(data)) {
+    throw new Error('Token list response is not an array');
+  }
 
   const tokens: TokenInfo[] = data.map((t) => ({
     mint: t.id,

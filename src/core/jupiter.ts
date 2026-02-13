@@ -94,7 +94,13 @@ export async function getQuote(params: {
     throw new Error(message);
   }
 
-  return (await res.json()) as QuoteResult;
+  let parsed: unknown;
+  try {
+    parsed = await res.json();
+  } catch {
+    throw new Error('Jupiter quote returned invalid JSON');
+  }
+  return parsed as QuoteResult;
 }
 
 /** Build a swap transaction from a quote response via Jupiter. */
@@ -137,10 +143,12 @@ export async function getSwapTransaction(params: {
     throw new Error(message);
   }
 
-  const data = (await res.json()) as {
-    swapTransaction: string;
-    lastValidBlockHeight: number;
-  };
+  let data: { swapTransaction: string; lastValidBlockHeight: number };
+  try {
+    data = (await res.json()) as typeof data;
+  } catch {
+    throw new Error('Jupiter swap returned invalid JSON');
+  }
 
   return {
     swapTransaction: data.swapTransaction,

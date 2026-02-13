@@ -209,6 +209,21 @@ describe('jupiter', () => {
       expect(callCount).toBe(1);
     });
 
+    it('throws on invalid JSON response', async () => {
+      globalThis.fetch = mock(async () => {
+        return new Response('not json at all', { status: 200 });
+      }) as unknown as typeof fetch;
+
+      await expect(
+        getQuote({
+          inputMint: 'So11111111111111111111111111111111',
+          outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+          amount: '1000000000',
+          slippageBps: 50,
+        }),
+      ).rejects.toThrow('Jupiter quote returned invalid JSON');
+    });
+
     it('throws on non-200/non-429 with error message from response body', async () => {
       globalThis.fetch = mock(async () => {
         return new Response(JSON.stringify({ error: 'Invalid token mint' }), {
@@ -262,6 +277,19 @@ describe('jupiter', () => {
       });
 
       expect(capturedBody.feeAccount).toBe('FeeAccountPubkeyHere11111111111111');
+    });
+
+    it('throws on invalid JSON response', async () => {
+      globalThis.fetch = mock(async () => {
+        return new Response('not json', { status: 200 });
+      }) as unknown as typeof fetch;
+
+      await expect(
+        getSwapTransaction({
+          quoteResponse: mockQuoteResponse as any,
+          userPublicKey: '11111111111111111111111111111112',
+        }),
+      ).rejects.toThrow('Jupiter swap returned invalid JSON');
     });
 
     it('returns swapTransaction and lastValidBlockHeight', async () => {

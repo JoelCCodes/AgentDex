@@ -38,6 +38,22 @@ function mockFetch(tokens: Array<{ id: string; symbol: string; name: string; dec
 }
 
 describe('fetchTokenList', () => {
+  it('throws on invalid JSON response', async () => {
+    globalThis.fetch = mock(() =>
+      Promise.resolve(new Response('not json at all', { status: 200 }))
+    ) as unknown as typeof fetch;
+
+    await expect(fetchTokenList()).rejects.toThrow('invalid JSON');
+  });
+
+  it('throws when response is not an array', async () => {
+    globalThis.fetch = mock(() =>
+      Promise.resolve(new Response(JSON.stringify({ error: 'something' }), { status: 200 }))
+    ) as unknown as typeof fetch;
+
+    await expect(fetchTokenList()).rejects.toThrow('not an array');
+  });
+
   it('throws on timeout', async () => {
     globalThis.fetch = mock(async (_url: string | URL | Request, init?: RequestInit) => {
       // Simulate a slow response by waiting for the abort signal
